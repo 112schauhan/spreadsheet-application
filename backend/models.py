@@ -19,7 +19,7 @@ class Cell:
 class Spreadsheet:
     cells: Dict[str, Cell] = field(default_factory=dict)
     rows: int = 100
-    columns: int = 26
+    columns: int = 25  # Change from 26 to 25 to allow adding one more column
 
 @dataclass
 class User:

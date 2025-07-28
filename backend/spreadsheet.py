@@ -14,6 +14,8 @@ class SpreadsheetService:
     def get_or_create_sheet(self, sheet_id: str) -> Spreadsheet:
         if sheet_id not in self.spreadsheets:
             self.spreadsheets[sheet_id] = Spreadsheet()
+        # Return a copy to avoid direct reference issues
+        # This ensures modifications are properly saved back
         return self.spreadsheets[sheet_id]
 
     def validate_cell_ref(self, cell_ref: str) -> bool:
@@ -118,8 +120,12 @@ class SpreadsheetService:
 
     def add_column(self, sheet_id: str) -> None:
         sheet = self.get_or_create_sheet(sheet_id)
+        # Make sure we're not at the limit
         if sheet.columns < 26:
+            # Directly modify the sheet object
             sheet.columns += 1
+            # Make sure to update the original reference in the dictionary
+            self.spreadsheets[sheet_id].columns = sheet.columns
 
     def delete_column(self, sheet_id: str, col_char: str) -> None:
         sheet = self.get_or_create_sheet(sheet_id)
@@ -139,9 +145,23 @@ class SpreadsheetService:
             cell = sheet.cells.get(cell_ref)
             val = cell.value if cell else None
             values.append((row, val))
+        
+        # Custom sorting key function that can handle mixed types
+        def sort_key(item):
+            val = item[1]
+            # First sort by None values (always at the end)
+            if val is None:
+                return (1, 0)
+                
+            # Then sort by type (numbers before strings)
+            if isinstance(val, (int, float)):
+                return (0, val)
+            else:
+                # String values - place them after numbers
+                return (0.5, str(val))
 
-        values_sorted = sorted(values, key=lambda x: (
-            x[1] is None, x[1]), reverse=not ascending)
+        values_sorted = sorted(values, key=sort_key, reverse=not ascending)
+        
         for i, (orig_row, val) in enumerate(values_sorted):
             target_ref = f"{col_char}{rows[i]}"
             if val is None:
