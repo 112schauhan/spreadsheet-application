@@ -9,6 +9,7 @@ from websocket_handler import ConnectionManager
 from comments import CommentService
 from history import HistoryService
 from csv_handler import csv_router
+from auth import router as auth_router
 
 app = FastAPI()
 
@@ -22,6 +23,7 @@ app.add_middleware(
 )
 
 app.include_router(csv_router, prefix="/api")
+app.include_router(auth_router, prefix="/api/auth")
 
 manager = ConnectionManager()
 comment_service = CommentService()

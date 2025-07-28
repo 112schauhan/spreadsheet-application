@@ -3,11 +3,11 @@ import csv
 import io
 from spreadsheet import SpreadsheetService
 
-router = APIRouter()
+csv_router = APIRouter()
 spreadsheet_service = SpreadsheetService()
 
 
-@router.post("/import/{sheet_id}")
+@csv_router.post("/import/{sheet_id}")
 async def import_csv(sheet_id: str, file: UploadFile = File(...)):
     contents = await file.read()
     decoded = contents.decode("utf-8")
@@ -27,7 +27,7 @@ async def import_csv(sheet_id: str, file: UploadFile = File(...)):
     return {"message": f"Imported CSV for sheet {sheet_id}"}
 
 
-@router.get("/export/{sheet_id}")
+@csv_router.get("/export/{sheet_id}")
 def export_csv(sheet_id: str):
     import io
     from fastapi.responses import StreamingResponse

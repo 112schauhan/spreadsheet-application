@@ -43,7 +43,7 @@ class ConnectionManager:
             # Optionally broadcast user left
 
     async def handle_message(self, sheet_id: str, websocket: WebSocket, message: dict):
-        # Example message types: 'join', 'cell_update', 'cursor_update', 'user_presence'
+        # Example message types: 'join', 'cell_update', 'cursor_update', 'user_presence', 'comment_add', 'history_request'
         msg_type = message.get("type")
         if msg_type == "join":
             username = message.get("username", "Anonymous")
@@ -55,8 +55,18 @@ class ConnectionManager:
             value = message.get("value")
             formula = message.get("formula")
             user_id = self.usernames[sheet_id].get(websocket)
+            
+            # Store old value for history
+            old_cell = self.spreadsheet_service.get_cell_value(sheet_id, cell_ref)
+            old_value = old_cell.value if old_cell else None
+            
             cell = self.collaboration_service.apply_edit(
                 sheet_id, cell_ref, value, formula, user_id)
+            
+            # Log edit in history
+            from main import history_service
+            history_service.log_edit(sheet_id, cell_ref, old_value, cell.value, user_id)
+            
             # Broadcast updated cell to all clients
             await self.broadcast(sheet_id, {
                 "type": "cell_update",
@@ -73,4 +83,43 @@ class ConnectionManager:
                 "type": "cursor_update",
                 "userId": user_id,
                 "position": cursor_pos,
+            })
+        elif msg_type == "comment_add":
+            cell_ref = message.get("cellRef")
+            text = message.get("text")
+            user_id = self.usernames[sheet_id].get(websocket)
+            
+            # Add comment
+            from main import comment_service
+            comment = comment_service.add_comment(sheet_id, cell_ref, user_id, text)
+            
+            # Broadcast comment to all clients
+            await self.broadcast(sheet_id, {
+                "type": "comment_added",
+                "cellRef": cell_ref,
+                "commentId": comment.comment_id,
+                "userId": user_id,
+                "text": text,
+                "timestamp": comment.timestamp
+            })
+        elif msg_type == "history_request":
+            cell_ref = message.get("cellRef")
+            user_id = self.usernames[sheet_id].get(websocket)
+            
+            # Get cell history
+            from main import history_service
+            history = history_service.get_history(sheet_id, cell_ref)
+            
+            # Send history directly to the requesting client
+            await websocket.send_json({
+                "type": "history_response",
+                "cellRef": cell_ref,
+                "history": [
+                    {
+                        "oldValue": entry.old_value,
+                        "newValue": entry.new_value,
+                        "userId": entry.user_id,
+                        "timestamp": entry.timestamp
+                    } for entry in history
+                ]
             })
