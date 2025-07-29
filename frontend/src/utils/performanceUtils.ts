@@ -3,10 +3,10 @@ export function debounce<T extends (...args: any[]) => void>(
   fn: T,
   delay: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: number | null = null;
   return (...args: Parameters<T>) => {
     if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => fn(...args), delay);
+    timeout = window.setTimeout(() => fn(...args), delay);
   };
 }
 
@@ -19,7 +19,7 @@ export function throttle<T extends (...args: any[]) => void>(
     if (!inThrottle) {
       fn(...args);
       inThrottle = true;
-      setTimeout(() => (inThrottle = false), limit);
+      window.setTimeout(() => (inThrottle = false), limit);
     }
   };
 }

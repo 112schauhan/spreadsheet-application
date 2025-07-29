@@ -12,7 +12,7 @@ const ScrollIndicator: React.FC = () => {
     const gridContainer = document.querySelector('.spreadsheet-scroll');
     if (!gridContainer) return;
 
-    let hideTimeout: NodeJS.Timeout;
+    let hideTimeout: number;
 
     const handleScroll = () => {
       const element = gridContainer as HTMLElement;
@@ -24,7 +24,7 @@ const ScrollIndicator: React.FC = () => {
 
       // Hide indicator after scroll stops
       clearTimeout(hideTimeout);
-      hideTimeout = setTimeout(() => {
+      hideTimeout = window.setTimeout(() => {
         setIsVisible(false);
       }, 1000);
     };
