@@ -4,6 +4,7 @@ from fastapi import FastAPI,WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import os
 
 from websocket_handler import ConnectionManager
 from comments import CommentService
@@ -72,3 +73,15 @@ def get_cell(sheet_id: str, cell_ref: str):
         "type": cell.cell_type.value,
         "version": cell.version,
     }
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=port,
+        reload=False
+    )
+
+
