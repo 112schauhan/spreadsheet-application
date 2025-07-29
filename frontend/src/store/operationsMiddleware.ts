@@ -9,7 +9,7 @@ export const operationsMiddleware = createListenerMiddleware();
 // Listen for row operations
 operationsMiddleware.startListening({
   actionCreator: addRow,
-  effect: (action, listenerApi) => {
+  effect: (_action, listenerApi) => {
     const state = listenerApi.getState() as RootState;
     const newRows = state.operations.rows;
     const currentColumns = state.grid.columns;
@@ -23,7 +23,7 @@ operationsMiddleware.startListening({
 
 operationsMiddleware.startListening({
   actionCreator: deleteRow,
-  effect: (action, listenerApi) => {
+  effect: (_action, listenerApi) => {
     const state = listenerApi.getState() as RootState;
     const newRows = state.operations.rows;
     const currentColumns = state.grid.columns;
@@ -38,7 +38,7 @@ operationsMiddleware.startListening({
 // Listen for column operations
 operationsMiddleware.startListening({
   actionCreator: addColumn,
-  effect: (action, listenerApi) => {
+  effect: (_action, listenerApi) => {
     const state = listenerApi.getState() as RootState;
     const currentRows = state.grid.rows;
     const newColumns = state.operations.columns;
@@ -52,7 +52,7 @@ operationsMiddleware.startListening({
 
 operationsMiddleware.startListening({
   actionCreator: deleteColumn,
-  effect: (action, listenerApi) => {
+  effect: (_action, listenerApi) => {
     const state = listenerApi.getState() as RootState;
     const currentRows = state.grid.rows;
     const newColumns = state.operations.columns;

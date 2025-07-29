@@ -1,9 +1,9 @@
 import { useDispatch, useSelector } from "react-redux"
-import { type RootState } from "../store"
+import { type RootState, type AppDispatch } from "../store"
 import { recordChange, undo, redo } from "../store/historySlice"
 
 const useUndoRedo = () => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   const { past, future } = useSelector((state: RootState) => state.history)
   const undoHandler = () => {
     if (past.length > 0) dispatch(undo())

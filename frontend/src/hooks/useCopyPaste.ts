@@ -31,7 +31,7 @@ const useGridNavigation = () => {
         case 'Enter': row = Math.min(row + 1, rows - 1); e.preventDefault(); break;
         default: return;
       }
-      dispatch(selectCell(getCellRef(col, row)));
+      dispatch(selectCell({ cellRef: getCellRef(col, row) }));
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);

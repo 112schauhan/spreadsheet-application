@@ -66,7 +66,7 @@ const GridNavigation: React.FC = () => {
       }
 
       const newCellRef = `${getColLetter(col)}${row + 1}`;
-      dispatch(selectCell(newCellRef));
+      dispatch(selectCell({ cellRef: newCellRef }));
     };
 
     window.addEventListener("keydown", onKeyDown);
