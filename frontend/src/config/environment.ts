@@ -1,5 +1,5 @@
 export const IS_PRODUCTION =
-  import.meta.env.MODE === "production" || process.env.NODE_ENV === "production";
+  import.meta.env.MODE === "production" || import.meta.env.VITE_NODE_ENV === "production";
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:8000";
