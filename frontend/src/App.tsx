@@ -12,6 +12,7 @@ import LogoutButton from "./components/Auth/LogoutButton";
 import Toolbar from "./components/UI/Toolbar";
 import FormattingToolbar from "./components/BonusFeatures/FormattingToolbar";
 import CollaborationPanel from "./components/Collaboration/CollaborationPanel";
+import CollaborationDemo from "./components/Collaboration/CollaborationDemo";
 import GridContainer from "./components/Grid/GridContainer";
 import StatusBar from "./components/UI/StatusBar";
 
@@ -26,9 +27,9 @@ import CopyPasteHandler from "./components/Operations/CopyPasteHandler";
 
 import { useAuth } from "./hooks/useAuth";
 import useGridNavigation from "./hooks/useGridNavigation";
-import { useWebSocketConnection } from "./hooks/useWebSocket";
 import useSheetSync from "./hooks/useSheetSync";
 import { addSheet, deleteSheet, switchSheet } from "./store/sheetsSlice";
+import { WebSocketProvider } from "./contexts/WebSocketContext";
 
 const AppContent: React.FC = () => {
   const dispatch = useDispatch();
@@ -82,9 +83,6 @@ const AppContent: React.FC = () => {
   // Initialize sheet synchronization
   useSheetSync();
 
-  // Initialize WebSocket connection for real-time collaboration
-  useWebSocketConnection(activeSheetId);
-
   // Restore session on mount (if token present)
   // This will run only once when the component mounts
   useEffect(() => {
@@ -115,17 +113,18 @@ const AppContent: React.FC = () => {
 
   // Authenticated UI
   return (
-    <div className="flex flex-col h-screen bg-white text-gray-900">
-      {/* Header */}
-      <div className="flex justify-between items-center px-4 py-2 border-b border-gray-200 shadow-sm select-none">
-        <div className="flex items-center space-x-3">
-          <div className="text-blue-700 font-bold text-lg">Spreadsheet App</div>
-          <LogoutButton />
+    <WebSocketProvider sheetId={activeSheetId}>
+      <div className="flex flex-col h-screen bg-white text-gray-900">
+        {/* Header */}
+        <div className="flex justify-between items-center px-4 py-2 border-b border-gray-200 shadow-sm select-none">
+          <div className="flex items-center space-x-3">
+            <div className="text-blue-700 font-bold text-lg">Spreadsheet App</div>
+            <LogoutButton />
+          </div>
+          <div className="text-sm text-gray-600">
+            Signed in as <span className="font-semibold">{user.username}</span>
+          </div>
         </div>
-        <div className="text-sm text-gray-600">
-          Signed in as <span className="font-semibold">{user.username}</span>
-        </div>
-      </div>
 
       {/* Multiple Sheets Tabs */}
       <MultipleSheets 
@@ -173,7 +172,11 @@ const AppContent: React.FC = () => {
 
       {isLoading && <LoadingSpinner />}
       <Notification />
-    </div>
+      
+      {/* Collaboration Demo Panel */}
+      <CollaborationDemo />
+      </div>
+    </WebSocketProvider>
   );
 };
 
