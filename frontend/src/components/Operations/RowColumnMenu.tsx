@@ -1,68 +1,140 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addRow, deleteRow, addColumn, deleteColumn } from "../../store/operationsSlice";
-import { setDimensions } from "../../store/gridSlice";
+import { insertRowAfter, deleteRowAt, insertColumnAfter, deleteColumnAt } from "../../store/gridSlice";
 import { type RootState } from "../../store";
 
 const RowColumnMenu: React.FC = () => {
   const dispatch = useDispatch();
+  const { selectedRows, selectedColumns } = useSelector((state: RootState) => state.selection);
   const rows = useSelector((state: RootState) => state.operations.rows);
   const columns = useSelector((state: RootState) => state.operations.columns);
 
-  const handleAddRow = () => {
-    dispatch(addRow());
-    dispatch(setDimensions({ rows: rows + 1, columns }));
+  const handleInsertRow = () => {
+    if (selectedRows.length > 0) {
+      // Insert after the last selected row
+      const lastSelectedRow = Math.max(...selectedRows);
+      dispatch(insertRowAfter(lastSelectedRow));
+    } else {
+      // If no row is selected, insert at the end
+      dispatch(insertRowAfter(rows));
+    }
   };
 
   const handleDeleteRow = () => {
-    dispatch(deleteRow());
-    dispatch(setDimensions({ rows: Math.max(1, rows - 1), columns }));
+    if (selectedRows.length > 0) {
+      // Delete the first selected row (delete one at a time for simplicity)
+      const firstSelectedRow = Math.min(...selectedRows);
+      dispatch(deleteRowAt(firstSelectedRow));
+    }
   };
 
-  const handleAddColumn = () => {
-    dispatch(addColumn());
-    dispatch(setDimensions({ rows, columns: columns + 1 }));
+  const handleInsertColumn = () => {
+    if (selectedColumns.length > 0) {
+      // Insert after the last selected column
+      const lastSelectedColumn = selectedColumns.sort().pop();
+      if (lastSelectedColumn) {
+        dispatch(insertColumnAfter(lastSelectedColumn));
+      }
+    } else {
+      // If no column is selected, insert at the end
+      const lastColumnLetter = String.fromCharCode(64 + columns); // Convert number to letter
+      dispatch(insertColumnAfter(lastColumnLetter));
+    }
   };
 
   const handleDeleteColumn = () => {
-    dispatch(deleteColumn());
-    dispatch(setDimensions({ rows, columns: Math.max(1, columns - 1) }));
+    if (selectedColumns.length > 0) {
+      // Delete the first selected column (delete one at a time for simplicity)
+      const firstSelectedColumn = selectedColumns.sort()[0];
+      dispatch(deleteColumnAt(firstSelectedColumn));
+    }
+  };
+
+  const getRowButtonText = () => {
+    if (selectedRows.length > 0) {
+      const lastRow = Math.max(...selectedRows);
+      return `Insert Row After ${lastRow}`;
+    }
+    return 'Add Row at End';
+  };
+
+  const getColumnButtonText = () => {
+    if (selectedColumns.length > 0) {
+      const lastColumn = selectedColumns.sort().pop();
+      return `Insert Column After ${lastColumn}`;
+    }
+    return 'Add Column at End';
+  };
+
+  const getDeleteRowText = () => {
+    if (selectedRows.length > 0) {
+      const firstRow = Math.min(...selectedRows);
+      return `Delete Row ${firstRow}`;
+    }
+    return 'Delete Row (select row first)';
+  };
+
+  const getDeleteColumnText = () => {
+    if (selectedColumns.length > 0) {
+      const firstColumn = selectedColumns.sort()[0];
+      return `Delete Column ${firstColumn}`;
+    }
+    return 'Delete Column (select column first)';
   };
 
   return (
     <div className="flex flex-col space-y-2 p-4 bg-white rounded shadow border border-gray-200">
       <div className="flex items-center space-x-2">
         <button
-          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
-          onClick={handleAddRow}
+          className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
+          onClick={handleInsertRow}
+          title={getRowButtonText()}
         >
-          + Row
+          <span className="text-sm font-bold">+</span>
+          Row
         </button>
         <button
-          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-60"
+          className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-60"
           onClick={handleDeleteRow}
-          disabled={rows <= 1}
+          disabled={selectedRows.length === 0 || rows <= 1}
+          title={getDeleteRowText()}
         >
-          – Row
+          <span className="text-sm font-bold">−</span>
+          Row
         </button>
         <span className="text-gray-500">Rows: {rows}</span>
       </div>
       <div className="flex items-center space-x-2">
         <button
-          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
-          onClick={handleAddColumn}
+          className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
+          onClick={handleInsertColumn}
+          title={getColumnButtonText()}
         >
-          + Column
+          <span className="text-sm font-bold">+</span>
+          Column
         </button>
         <button
-          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-60"
+          className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-60"
           onClick={handleDeleteColumn}
-          disabled={columns <= 1}
+          disabled={selectedColumns.length === 0 || columns <= 1}
+          title={getDeleteColumnText()}
         >
-          – Column
+          <span className="text-sm font-bold">−</span>
+          Column
         </button>
         <span className="text-gray-500">Columns: {columns}</span>
       </div>
+      
+      {(selectedRows.length > 0 || selectedColumns.length > 0) && (
+        <div className="text-sm text-gray-600 border-t pt-2">
+          {selectedRows.length > 0 && (
+            <div>Selected Row{selectedRows.length > 1 ? 's' : ''}: {selectedRows.join(', ')}</div>
+          )}
+          {selectedColumns.length > 0 && (
+            <div>Selected Column{selectedColumns.length > 1 ? 's' : ''}: {selectedColumns.join(', ')}</div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
