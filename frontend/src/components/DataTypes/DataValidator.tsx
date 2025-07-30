@@ -25,7 +25,9 @@ const DataValidator: React.FC<DataValidatorProps> = ({
       return
     }
 
-    const validation = validateCellValue(value, dataType)
+    // Map "string" to "text" for validationService compatibility
+    const mappedType = dataType === "string" ? "text" : dataType
+    const validation = validateCellValue(value, mappedType)
     setError(validation.error || null)
     
     if (onValidChange) {
