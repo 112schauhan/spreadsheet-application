@@ -297,6 +297,7 @@ const Cell: React.FC<CellProps> = React.memo(({ cellRef, style }) => {
   return (
     <div
       ref={cellRef_element}
+      data-cell={cellRef}
       className={getCellClasses()}
       style={getCellStyles()}
       tabIndex={0}

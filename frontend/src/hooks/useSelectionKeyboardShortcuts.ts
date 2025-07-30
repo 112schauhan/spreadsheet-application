@@ -31,6 +31,20 @@ const useSelectionKeyboardShortcuts = () => {
         return;
       }
 
+      // F2 - Edit current cell
+      if (e.key === 'F2') {
+        e.preventDefault();
+        const currentCell = selection.lastSelectedCell || selection.selectedCell;
+        if (currentCell) {
+          // Find the cell element and trigger edit mode
+          const cellElement = document.querySelector(`[data-cell="${currentCell}"]`) as HTMLElement;
+          if (cellElement) {
+            cellElement.dispatchEvent(new Event('dblclick', { bubbles: true }));
+          }
+        }
+        return;
+      }
+
       // Arrow keys for navigation
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
@@ -71,7 +85,7 @@ const useSelectionKeyboardShortcuts = () => {
         return;
       }
 
-      // Enter - Move down
+      // Enter - Move down or edit cell
       if (e.key === 'Enter') {
         e.preventDefault();
         
@@ -81,10 +95,24 @@ const useSelectionKeyboardShortcuts = () => {
         const coords = parseCellRef(currentCell);
         if (!coords) return;
 
-        const newRow = Math.min(grid.rows - 1, coords.row + 1);
-        const newCellRef = coordinatesToCellRef({ row: newRow, col: coords.col });
-
-        dispatch(selectCell({ cellRef: newCellRef }));
+        // If Shift+Enter or just Enter without other modifiers, move down
+        if (e.shiftKey) {
+          // Shift+Enter = move up
+          const newRow = Math.max(0, coords.row - 1);
+          const newCellRef = coordinatesToCellRef({ row: newRow, col: coords.col });
+          dispatch(selectCell({ cellRef: newCellRef }));
+        } else if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+          // Plain Enter = start editing current cell
+          const cellElement = document.querySelector(`[data-cell="${currentCell}"]`) as HTMLElement;
+          if (cellElement) {
+            cellElement.dispatchEvent(new Event('dblclick', { bubbles: true }));
+          }
+        } else {
+          // Ctrl/Cmd+Enter = move down
+          const newRow = Math.min(grid.rows - 1, coords.row + 1);
+          const newCellRef = coordinatesToCellRef({ row: newRow, col: coords.col });
+          dispatch(selectCell({ cellRef: newCellRef }));
+        }
         return;
       }
 
