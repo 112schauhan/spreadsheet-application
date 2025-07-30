@@ -14,14 +14,55 @@ export function validateCellValue(
   }
 
   if (expectedType === 'date') {
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(value.trim())) {
-      return { isValid: false, error: "Invalid date format — use YYYY-MM-DD" };
+    if (value.trim() === "") {
+      return { isValid: true }; // Allow blank
     }
-    const dateObj = new Date(value.trim());
-    if (isNaN(dateObj.getTime())) {
-      return { isValid: false, error: "Date is not valid" };
+    
+    // Enhanced date validation
+    const dateRegex = /^(\d{1,2})-(\d{1,2})-(\d{4})$/;
+    const match = value.trim().match(dateRegex);
+    
+    if (!match) {
+      return { isValid: false, error: "Invalid date format — use DD-MM-YYYY" };
     }
+    
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+    
+    // Basic range checks
+    if (month < 1 || month > 12) {
+      return { isValid: false, error: "Month must be between 1-12" };
+    }
+    
+    if (day < 1 || day > 31) {
+      return { isValid: false, error: "Day must be between 1-31" };
+    }
+    
+    // Days in month validation
+    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    
+    // Check for leap year
+    const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    if (isLeapYear) {
+      daysInMonth[1] = 29; // February has 29 days in leap year
+    }
+    
+    if (day > daysInMonth[month - 1]) {
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                         'July', 'August', 'September', 'October', 'November', 'December'];
+      return { 
+        isValid: false, 
+        error: `${monthNames[month - 1]} ${year} only has ${daysInMonth[month - 1]} days` 
+      };
+    }
+    
+    // Create date object to verify it's a real date
+    const dateObj = new Date(year, month - 1, day);
+    if (dateObj.getFullYear() !== year || dateObj.getMonth() !== month - 1 || dateObj.getDate() !== day) {
+      return { isValid: false, error: "Invalid date" };
+    }
+    
     return { isValid: true };
   }
 

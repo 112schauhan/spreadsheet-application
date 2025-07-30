@@ -1,99 +1,133 @@
 import { type CellData } from "../types/grid.types";
 
 export const demoCells: Record<string, CellData> = {
-  // Demo for all required features
+  // Organized sample data - Employee Performance Dashboard
   
-  // 1. Basic data for formulas and sorting
-  A1: { value: "Product" },
-  B1: { value: "Price" },
-  C1: { value: "Quantity" },
-  D1: { value: "Total" },
-  E1: { value: "Category" },
+  // Headers
+  A1: { value: "Employee ID" },
+  B1: { value: "Name" },
+  C1: { value: "Department" },
+  D1: { value: "Start Date" },
+  E1: { value: "Monthly Salary" },
+  F1: { value: "Bonus %" },
+  G1: { value: "Total Compensation" },
   
-  A2: { value: "Apple" },
-  B2: { value: 3.15 },
-  C2: { value: 10 },
-  D2: { value: 31.5, formula: "=B2*C2" },
-  E2: { value: "Fruit" },
+  // Employee data
+  A2: { value: "EMP001" },
+  B2: { value: "John Smith" },
+  C2: { value: "Engineering" },
+  D2: { value: "15-01-2023" },
+  E2: { value: 8500 },
+  F2: { value: 12 },
+  G2: { value: 9520, formula: "=E2*(1+F2/100)" },
   
-  A3: { value: "Banana" },
-  B3: { value: 2.45 },
-  C3: { value: 5 },
-  D3: { value: 12.25, formula: "=B3*C3" },
-  E3: { value: "Fruit" },
+  A3: { value: "EMP002" },
+  B3: { value: "Sarah Johnson" },
+  C3: { value: "Marketing" },
+  D3: { value: "22-03-2023" },
+  E3: { value: 7200 },
+  F3: { value: 15 },
+  G3: { value: 8280, formula: "=E3*(1+F3/100)" },
   
-  A4: { value: "Orange" },
-  B4: { value: 4.20 },
-  C4: { value: 12 },
-  D4: { value: 50.4, formula: "=B4*C4" },
-  E4: { value: "Fruit" },
+  A4: { value: "EMP003" },
+  B4: { value: "Mike Davis" },
+  C4: { value: "Sales" },
+  D4: { value: "08-06-2023" },
+  E4: { value: 6800 },
+  F4: { value: 18 },
+  G4: { value: 8024, formula: "=E4*(1+F4/100)" },
   
-  A5: { value: "Carrot" },
-  B5: { value: 1.85 },
-  C5: { value: 8 },
-  D5: { value: 14.8, formula: "=B5*C5" },
-  E5: { value: "Vegetable" },
+  A5: { value: "EMP004" },
+  B5: { value: "Lisa Chen" },
+  C5: { value: "Engineering" },
+  D5: { value: "12-09-2023" },
+  E5: { value: 9200 },
+  F5: { value: 10 },
+  G5: { value: 10120, formula: "=E5*(1+F5/100)" },
   
-  // 2. Formula examples showcase
-  A7: { value: "Formula Examples:" },
-  A8: { value: "SUM:" },
-  B8: { value: 108.8, formula: "=SUM(D2:D5)" },
-  A9: { value: "AVERAGE:" },
-  B9: { value: 27.2, formula: "=AVERAGE(D2:D5)" },
-  A10: { value: "COUNT:" },
-  B10: { value: 4, formula: "=COUNT(D2:D5)" },
+  A6: { value: "EMP005" },
+  B6: { value: "David Wilson" },
+  C6: { value: "HR" },
+  D6: { value: "03-11-2023" },
+  E6: { value: 6500 },
+  F6: { value: 8 },
+  G6: { value: 7020, formula: "=E6*(1+F6/100)" },
   
-  // 3. Demo data for copy/paste testing
-  G1: { value: "Copy/Paste Demo" },
-  G2: { value: "Value 1" },
-  H2: { value: 100 },
-  G3: { value: "Value 2" },
-  H3: { value: 200 },
-  G4: { value: "Value 3" },
-  H4: { value: 300 },
+  // Summary section
+  A8: { value: "Department Summary:" },
+  A9: { value: "Total Employees:" },
+  B9: { value: 5, formula: "=COUNT(A2:A6)" },
+  A10: { value: "Average Salary:" },
+  B10: { value: 7640, formula: "=AVERAGE(E2:E6)" },
+  A11: { value: "Total Compensation:" },
+  B11: { value: 42964, formula: "=SUM(G2:G6)" },
   
-  // 4. Sorting demo data (unsorted numbers)
-  J1: { value: "Sort Demo" },
-  J2: { value: 45 },
-  J3: { value: 12 },
-  J4: { value: 78 },
-  J5: { value: 23 },
-  J6: { value: 67 },
+  // Performance metrics
+  D9: { value: "Top Performer:" },
+  E9: { value: "Lisa Chen" },
+  D10: { value: "Highest Bonus:" },
+  E10: { value: "18%" },
+  D11: { value: "Department Count:" },
+  E11: { value: 4, formula: "=COUNT(C2:C6)" },
   
-  // 5. Cell editing examples
-  A12: { value: "Double-click to edit" },
-  A13: { value: "Press F2 to edit" },
-  A14: { value: "Press Enter to edit" },
+  // Additional data for testing features
+  H1: { value: "Copy/Paste Demo" },
+  H2: { value: "Quarter" },
+  I2: { value: "Target" },
+  J2: { value: "Actual" },
+  H3: { value: "Q1" },
+  I3: { value: 25000 },
+  J3: { value: 27500 },
+  H4: { value: "Q2" },
+  I4: { value: 28000 },
+  J4: { value: 26800 },
   
-  // 6. Row/Column operations demo
-  A16: { value: "Operations Demo" },
-  B16: { value: "Add/Delete rows/cols" },
-  C16: { value: "Use sidebar controls" },
+  // Sorting demo data
+  L1: { value: "Sort Demo (Random)" },
+  L2: { value: 156 },
+  L3: { value: 89 },
+  L4: { value: 234 },
+  L5: { value: 45 },
+  L6: { value: 178 },
+  L7: { value: 123 },
   
-  // Add some data further down to demo scrolling
-  A20: { value: "Quarterly Report" },
-  B20: { value: "Q1" },
-  C20: { value: "Q2" },
-  D20: { value: "Q3" },
-  E20: { value: "Q4" },
-  A21: { value: "Sales" },
-  B21: { value: 15000 },
-  C21: { value: 18000 },
-  D21: { value: 22000 },
-  E21: { value: 19000 },
-  A22: { value: "Total" },
-  B22: { value: 74000, formula: "=SUM(B21:E21)" },
+  // Instructions and examples
+  A13: { value: "Feature Testing:" },
+  A14: { value: "• Double-click cells to edit" },
+  A15: { value: "• Try formulas: =SUM(E2:E6)" },
+  A16: { value: "• Copy H2:J4 and paste elsewhere" },
+  A17: { value: "• Sort column L (ascending/descending)" },
+  A18: { value: "• Right-click cells for comments" },
+  A19: { value: "• Use Ctrl+Z/Y for undo/redo" },
   
-  // Add some data to the right to demo horizontal scrolling
-  Z1: { value: "Notes" },
-  Z2: { value: "Fresh fruit" },
-  Z3: { value: "Organic" },
-  Z4: { value: "Import" },
+  // Chart data section
+  N1: { value: "Chart Data Sample" },
+  N2: { value: "Product" },
+  O2: { value: "Sales" },
+  P2: { value: "Profit" },
+  N3: { value: "Laptops" },
+  O3: { value: 45000 },
+  P3: { value: 12000 },
+  N4: { value: "Phones" },
+  O4: { value: 38000 },
+  P4: { value: 15000 },
+  N5: { value: "Tablets" },
+  O5: { value: 22000 },
+  P5: { value: 8000 },
+  N6: { value: "Accessories" },
+  O6: { value: 15000 },
+  P6: { value: 7500 },
   
-  // Add navigation test data
-  A50: { value: "Navigation Test" },
-  A100: { value: "Press Ctrl+Home to go to A1" },
-  A200: { value: "Use Page Up/Down" },
+  // Navigation test data
+  A25: { value: "Scroll Test - More data below" },
+  A50: { value: "Middle section - Press Ctrl+Home to go to A1" },
+  A100: { value: "Far down - Use Page Up/Down for navigation" },
+  
+  // Horizontal scroll test
+  Z1: { value: "Far Right" },
+  Z2: { value: "Horizontal scroll test" },
+  AA1: { value: "Column AA" },
+  AB1: { value: "Column AB" },
 };
 
 export const demoSheets = [

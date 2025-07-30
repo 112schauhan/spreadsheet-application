@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"
+import { validateCellValue } from "../../services/validationService"
 
 interface DataValidatorProps {
   value: string
@@ -16,25 +17,19 @@ const DataValidator: React.FC<DataValidatorProps> = ({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    let valid = true
-    let message = null
-
-    if (dataType === "number") {
-      if (value !== "" && isNaN(Number(value))) {
-        valid = false
-        message = "Value must be a valid number"
+    if (value === "") {
+      setError(null)
+      if (onValidChange) {
+        onValidChange(true)
       }
-    } else if (dataType === "date") {
-      if (value !== "" && isNaN(Date.parse(value))) {
-        valid = false
-        message = "Value must be a valid date"
-      }
+      return
     }
-    // For strings, no strict validation here
 
-    setError(message)
+    const validation = validateCellValue(value, dataType)
+    setError(validation.error || null)
+    
     if (onValidChange) {
-      onValidChange(valid)
+      onValidChange(validation.isValid)
     }
   }, [value, dataType, onValidChange])
 
