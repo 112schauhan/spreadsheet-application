@@ -31,7 +31,28 @@ const operationsSlice = createSlice({
     deleteColumn(state) {
       if (state.columns > 1) state.columns -= 1;
     },
-     setSort(state, action: PayloadAction<{ column: string; ascending: boolean }>) {
+    // New actions for inserting/deleting at specific positions
+    insertRowAfter(state, _action: PayloadAction<number>) {
+      if (state.rows < 1000) {
+        state.rows += 1;
+      }
+    },
+    deleteRowAt(state, _action: PayloadAction<number>) {
+      if (state.rows > MIN_ROWS) {
+        state.rows -= 1;
+      }
+    },
+    insertColumnAfter(state, _action: PayloadAction<string>) {
+      if (state.columns < MAX_COLS) {
+        state.columns += 1;
+      }
+    },
+    deleteColumnAt(state, _action: PayloadAction<string>) {
+      if (state.columns > 1) {
+        state.columns -= 1;
+      }
+    },
+    setSort(state, action: PayloadAction<{ column: string; ascending: boolean }>) {
       state.sortColumn = action.payload.column;
       state.sortAscending = action.payload.ascending;
     },
@@ -48,5 +69,17 @@ const operationsSlice = createSlice({
   },
 });
 
-export const { addRow, deleteRow, addColumn, deleteColumn, setSort,setDimensions,resetOperations } = operationsSlice.actions;
+export const { 
+  addRow, 
+  deleteRow, 
+  addColumn, 
+  deleteColumn, 
+  insertRowAfter,
+  deleteRowAt,
+  insertColumnAfter,
+  deleteColumnAt,
+  setSort,
+  setDimensions,
+  resetOperations 
+} = operationsSlice.actions;
 export default operationsSlice.reducer;

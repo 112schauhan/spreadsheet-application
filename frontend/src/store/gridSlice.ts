@@ -135,6 +135,123 @@ const gridSlice = createSlice({
       
       state.cells = newCells;
     },
+    // New actions for inserting and deleting rows/columns at specific positions
+    insertRowAfter(state, action: PayloadAction<number>) {
+      const afterRow = action.payload;
+      const newCells: Record<string, CellData> = {};
+      
+      // Shift all rows after the insertion point down by 1
+      Object.keys(state.cells).forEach(cellRef => {
+        const match = cellRef.match(/^([A-Z]+)(\d+)$/);
+        if (match) {
+          const col = match[1];
+          const row = parseInt(match[2]);
+          
+          if (row > afterRow) {
+            // Shift this cell down by 1 row
+            const newCellRef = `${col}${row + 1}`;
+            newCells[newCellRef] = { ...state.cells[cellRef] };
+          } else {
+            // Keep this cell in the same position
+            newCells[cellRef] = { ...state.cells[cellRef] };
+          }
+        }
+      });
+      
+      state.cells = newCells;
+      state.rows += 1;
+    },
+    deleteRowAt(state, action: PayloadAction<number>) {
+      const targetRow = action.payload;
+      const newCells: Record<string, CellData> = {};
+      
+      // Remove all cells in the target row and shift cells below up
+      Object.keys(state.cells).forEach(cellRef => {
+        const match = cellRef.match(/^([A-Z]+)(\d+)$/);
+        if (match) {
+          const col = match[1];
+          const row = parseInt(match[2]);
+          
+          if (row === targetRow) {
+            // Delete this cell (don't copy it)
+            return;
+          } else if (row > targetRow) {
+            // Shift this cell up by 1 row
+            const newCellRef = `${col}${row - 1}`;
+            newCells[newCellRef] = { ...state.cells[cellRef] };
+          } else {
+            // Keep this cell in the same position
+            newCells[cellRef] = { ...state.cells[cellRef] };
+          }
+        }
+      });
+      
+      state.cells = newCells;
+      if (state.rows > 1) {
+        state.rows -= 1;
+      }
+    },
+    insertColumnAfter(state, action: PayloadAction<string>) {
+      const afterColumn = action.payload;
+      const afterColIndex = afterColumn.charCodeAt(0) - 65; // Convert A=0, B=1, etc.
+      const newCells: Record<string, CellData> = {};
+      
+      // Shift all columns after the insertion point right by 1
+      Object.keys(state.cells).forEach(cellRef => {
+        const match = cellRef.match(/^([A-Z]+)(\d+)$/);
+        if (match) {
+          const col = match[1];
+          const row = match[2];
+          const colIndex = col.charCodeAt(0) - 65;
+          
+          if (colIndex > afterColIndex) {
+            // Shift this cell right by 1 column
+            const newCol = String.fromCharCode(65 + colIndex + 1);
+            const newCellRef = `${newCol}${row}`;
+            newCells[newCellRef] = { ...state.cells[cellRef] };
+          } else {
+            // Keep this cell in the same position
+            newCells[cellRef] = { ...state.cells[cellRef] };
+          }
+        }
+      });
+      
+      state.cells = newCells;
+      state.columns += 1;
+    },
+    deleteColumnAt(state, action: PayloadAction<string>) {
+      const targetColumn = action.payload;
+      const targetColIndex = targetColumn.charCodeAt(0) - 65; // Convert A=0, B=1, etc.
+      const newCells: Record<string, CellData> = {};
+      
+      // Remove all cells in the target column and shift cells to the right left
+      Object.keys(state.cells).forEach(cellRef => {
+        const match = cellRef.match(/^([A-Z]+)(\d+)$/);
+        if (match) {
+          const col = match[1];
+          const row = match[2];
+          const colIndex = col.charCodeAt(0) - 65;
+          
+          if (colIndex === targetColIndex) {
+            // Delete this cell (don't copy it)
+            return;
+          } else if (colIndex > targetColIndex) {
+            // Shift this cell left by 1 column
+            const newCol = String.fromCharCode(65 + colIndex - 1);
+            const newCellRef = `${newCol}${row}`;
+            newCells[newCellRef] = { ...state.cells[cellRef] };
+          } else {
+            // Keep this cell in the same position
+            newCells[cellRef] = { ...state.cells[cellRef] };
+          }
+        }
+      });
+      
+      state.cells = newCells;
+      if (state.columns > 1) {
+        state.columns -= 1;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(switchSheet, (state) => {
@@ -149,5 +266,16 @@ const gridSlice = createSlice({
   },
 });
 
-export const { updateCell, setVisibleRange, setDimensions, resetGrid, loadSheetCells, sortData } = gridSlice.actions;
+export const { 
+  updateCell, 
+  setVisibleRange, 
+  setDimensions, 
+  resetGrid, 
+  loadSheetCells, 
+  sortData,
+  insertRowAfter,
+  deleteRowAt,
+  insertColumnAfter,
+  deleteColumnAt
+} = gridSlice.actions;
 export default gridSlice.reducer;
