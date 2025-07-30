@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { type RootState } from "../../store";
 import GridHeader from "./GridHeader";
@@ -6,12 +6,29 @@ import RowHeader from "./RowHeader";
 import VirtualizedGrid from "./VirtualizedGrid";
 import SelectionManager from "./SelectionManager";
 import UserCursor from "../Collaboration/UserCursor";
+import ConflictResolutionModal from "../Collaboration/ConflictResolutionModal";
 import ScrollIndicator from "./ScrollIndicator";
 import useSelectionKeyboardShortcuts from "../../hooks/useSelectionKeyboardShortcuts";
 
 const GridContainer: React.FC = () => {
   const users = useSelector((state: RootState) => state.collaboration.users);
+  const conflicts = useSelector((state: RootState) => state.collaboration.conflicts);
   const currentUser = useSelector((state: RootState) => state.auth.user);
+  
+  // State for conflict resolution modal
+  const [conflictModalVisible, setConflictModalVisible] = useState(false);
+  const [conflictCellRef, setConflictCellRef] = useState<string>("");
+  
+  // Find the first conflicted cell to show in modal
+  const conflictedCells = Object.keys(conflicts).filter(cellRef => conflicts[cellRef]);
+  
+  // Show conflict modal when there's a conflict
+  React.useEffect(() => {
+    if (conflictedCells.length > 0 && !conflictModalVisible) {
+      setConflictCellRef(conflictedCells[0]);
+      setConflictModalVisible(true);
+    }
+  }, [conflictedCells, conflictModalVisible]);
   
   // Enable keyboard shortcuts for selection
   useSelectionKeyboardShortcuts();
@@ -41,6 +58,13 @@ const GridContainer: React.FC = () => {
       </div>
       {/* Scroll position indicator */}
       <ScrollIndicator />
+      
+      {/* Conflict Resolution Modal */}
+      <ConflictResolutionModal
+        cellRef={conflictCellRef}
+        isVisible={conflictModalVisible}
+        onClose={() => setConflictModalVisible(false)}
+      />
     </div>
   );
 };
