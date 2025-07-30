@@ -6,8 +6,6 @@ import { parseCellRef, colToIndex } from "../../utils/cellUtils"
 import {
   CELL_HEIGHT,
   CELL_WIDTH,
-  COLUMN_HEADER_HEIGHT,
-  ROW_HEADER_WIDTH,
 } from "../../config/constants"
 /**
  * Visually highlights the selected cell range as a rectangle overlay.
@@ -32,9 +30,10 @@ const CellRangeSelector: React.FC = () => {
   const topRow = Math.min(startRow, endRow)
   const bottomRow = Math.max(startRow, endRow)
 
-  // Calculate pixel positions relative to grid container
-  const left = ROW_HEADER_WIDTH + leftCol * CELL_WIDTH
-  const top = COLUMN_HEADER_HEIGHT + (topRow - 1) * CELL_HEIGHT
+  // Calculate pixel positions relative to grid content 
+  // parseCellRef from cellUtils returns 1-based coordinates, so we need topRow-1 for 0-based positioning
+  const left = leftCol * CELL_WIDTH
+  const top = (topRow - 1) * CELL_HEIGHT
   const width = (rightCol - leftCol + 1) * CELL_WIDTH
   const height = (bottomRow - topRow + 1) * CELL_HEIGHT
 
