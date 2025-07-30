@@ -36,7 +36,7 @@ class User(BaseModel):
     username: str
     color: str
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def authenticate_user(username: str, password: str) -> Optional[User]:
     """Verify username/password and return user if valid"""
