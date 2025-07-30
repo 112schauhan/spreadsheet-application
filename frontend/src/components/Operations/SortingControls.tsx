@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { setSort } from "../../store/operationsSlice";
+import { sortData } from "../../store/gridSlice";
 import { DEFAULT_COLUMNS } from "../../config/constants";
 
 const colLabels = Array.from({ length: DEFAULT_COLUMNS }, (_, i) =>
@@ -14,6 +15,7 @@ const SortingControls: React.FC = () => {
 
   const handleSort = () => {
     dispatch(setSort({ column, ascending }));
+    dispatch(sortData({ column, ascending }));
   };
 
   return (

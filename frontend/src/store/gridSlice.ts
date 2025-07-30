@@ -83,6 +83,58 @@ const gridSlice = createSlice({
     loadSheetCells(state, action: PayloadAction<Record<string, CellData>>) {
       state.cells = action.payload;
     },
+    sortData(state, action: PayloadAction<{ column: string; ascending: boolean }>) {
+      const { column, ascending } = action.payload;
+      
+      // Get all row numbers that have data in the specified column
+      const columnCells = Object.keys(state.cells)
+        .filter(cellRef => cellRef.startsWith(column))
+        .map(cellRef => ({
+          cellRef,
+          row: parseInt(cellRef.slice(column.length)),
+          value: state.cells[cellRef]?.value
+        }))
+        .filter(item => item.value !== null && item.value !== undefined && item.value !== "")
+        .sort((a, b) => {
+          if (typeof a.value === 'number' && typeof b.value === 'number') {
+            return ascending ? a.value - b.value : b.value - a.value;
+          }
+          const aStr = String(a.value || '').toLowerCase();
+          const bStr = String(b.value || '').toLowerCase();
+          return ascending ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
+        });
+
+      // Create a mapping of old rows to new rows
+      const newCells: Record<string, CellData> = {};
+      
+      // Copy all cells first
+      Object.keys(state.cells).forEach(cellRef => {
+        newCells[cellRef] = { ...state.cells[cellRef] };
+      });
+      
+      // Rearrange rows based on sort order
+      columnCells.forEach((item, index) => {
+        const oldRow = item.row;
+        const newRow = index + 1;
+        
+        if (oldRow !== newRow) {
+          // Move all cells in this row
+          Object.keys(state.cells).forEach(cellRef => {
+            const match = cellRef.match(/^([A-Z]+)(\d+)$/);
+            if (match && parseInt(match[2]) === oldRow) {
+              const col = match[1];
+              const newCellRef = `${col}${newRow}`;
+              newCells[newCellRef] = { ...state.cells[cellRef] };
+              if (newCellRef !== cellRef) {
+                delete newCells[cellRef];
+              }
+            }
+          });
+        }
+      });
+      
+      state.cells = newCells;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(switchSheet, (state) => {
@@ -97,5 +149,5 @@ const gridSlice = createSlice({
   },
 });
 
-export const { updateCell, setVisibleRange, setDimensions, resetGrid, loadSheetCells } = gridSlice.actions;
+export const { updateCell, setVisibleRange, setDimensions, resetGrid, loadSheetCells, sortData } = gridSlice.actions;
 export default gridSlice.reducer;

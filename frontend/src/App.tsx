@@ -11,6 +11,7 @@ import LogoutButton from "./components/Auth/LogoutButton";
 
 import Toolbar from "./components/UI/Toolbar";
 import FormattingToolbar from "./components/BonusFeatures/FormattingToolbar";
+import FeatureShowcase from "./components/UI/FeatureShowcase";
 import CollaborationPanel from "./components/Collaboration/CollaborationPanel";
 import CollaborationDemo from "./components/Collaboration/CollaborationDemo";
 import GridContainer from "./components/Grid/GridContainer";
@@ -20,6 +21,7 @@ import CSVImportExport from "./components/BonusFeatures/CSVImportExport";
 import UndoRedo from "./components/BonusFeatures/UndoRedo";
 import ChartGenerator from "./components/BonusFeatures/ChartGenerator";
 import RowColumnMenu from "./components/Operations/RowColumnMenu";
+import SortingControls from "./components/Operations/SortingControls";
 import MultipleSheets from "./components/BonusFeatures/MultipleSheets";
 import FormulaBar from "./components/Formula/FormulaBar";
 import ContextMenu from "./components/Operations/ContextMenu";
@@ -27,6 +29,8 @@ import CopyPasteHandler from "./components/Operations/CopyPasteHandler";
 
 import { useAuth } from "./hooks/useAuth";
 import useGridNavigation from "./hooks/useGridNavigation";
+import useCopyPaste from "./hooks/useCopyPaste";
+import useSelectionKeyboardShortcuts from "./hooks/useSelectionKeyboardShortcuts";
 import useSheetSync from "./hooks/useSheetSync";
 import { addSheet, deleteSheet, switchSheet } from "./store/sheetsSlice";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
@@ -45,6 +49,9 @@ const AppContent: React.FC = () => {
     x: 0,
     y: 0
   });
+
+  // Feature showcase state
+  const [showFeatureShowcase, setShowFeatureShowcase] = React.useState(false);
 
   const handleChangeSheet = (sheetId: string) => {
     dispatch(switchSheet(sheetId));
@@ -79,6 +86,12 @@ const AppContent: React.FC = () => {
 
   // Initialize grid navigation
   useGridNavigation();
+  
+  // Initialize copy/paste functionality
+  useCopyPaste();
+  
+  // Initialize selection keyboard shortcuts
+  useSelectionKeyboardShortcuts();
 
   // Initialize sheet synchronization
   useSheetSync();
@@ -119,6 +132,12 @@ const AppContent: React.FC = () => {
         <div className="flex justify-between items-center px-4 py-2 border-b border-gray-200 shadow-sm select-none">
           <div className="flex items-center space-x-3">
             <div className="text-blue-700 font-bold text-lg">Spreadsheet App</div>
+            <button
+              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+              onClick={() => setShowFeatureShowcase(true)}
+            >
+              View Features
+            </button>
             <LogoutButton />
           </div>
           <div className="text-sm text-gray-600">
@@ -147,6 +166,7 @@ const AppContent: React.FC = () => {
       <main className="flex flex-1 overflow-hidden">
         <aside className="w-72 flex-shrink-0 border-r border-gray-200 p-4 bg-gray-50 overflow-y-auto space-y-6">
           <RowColumnMenu />
+          <SortingControls />
           <CSVImportExport />
           <UndoRedo />
           <ChartGenerator />
@@ -172,6 +192,12 @@ const AppContent: React.FC = () => {
 
       {isLoading && <LoadingSpinner />}
       <Notification />
+      
+      {/* Feature Showcase */}
+      <FeatureShowcase 
+        isOpen={showFeatureShowcase}
+        onClose={() => setShowFeatureShowcase(false)}
+      />
       
       {/* Collaboration Demo Panel */}
       <CollaborationDemo />
