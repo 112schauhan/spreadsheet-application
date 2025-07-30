@@ -215,14 +215,8 @@ const VirtualizedGrid: React.FC = () => {
         style={{
           width: '2600px', // 26 columns × 100px - larger than any typical container
           height: '2800px', // 100 rows × 28px - larger than any typical container
-          border: '1px solid red', // Debug: visible border to see the content area
         }}
       >
-        {/* Debug: Corner markers to show content boundaries */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '10px', height: '10px', backgroundColor: 'green' }}></div>
-        <div style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', backgroundColor: 'blue' }}></div>
-        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '10px', height: '10px', backgroundColor: 'orange' }}></div>
-        <div style={{ position: 'absolute', bottom: 0, right: 0, width: '10px', height: '10px', backgroundColor: 'purple' }}></div>
         {/* Render only visible cells */}
         {rows.map((row) =>
           cols.map((col) => {
