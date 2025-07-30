@@ -5,6 +5,10 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict
 import jwt as pyjwt
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # This is just a simple demo implementation
 # In a real application, you would use more secure methods for storing and handling credentials
@@ -19,10 +23,9 @@ DEMO_USERS = {
 }
 
 # Secret key for JWT encoding/decoding
-# In a real app, store this in environment variables
 SECRET_KEY = os.environ.get("SECRET_KEY", "supersecretkey")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
 # Token model
 class Token(BaseModel):

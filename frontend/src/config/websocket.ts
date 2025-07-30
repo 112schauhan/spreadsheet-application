@@ -1,7 +1,9 @@
-export const WEBSOCKET_BASE_URL =
-  import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws";
+import { WEBSOCKET_BASE_URL } from './environment';
+
+export const getWebSocketURL = WEBSOCKET_BASE_URL;
   
-export function getWebSocketURL(sheetId: string): string {
-  // Compose URL: e.g., ws://localhost:8000/ws/sheet/{sheetId}
-  return `${WEBSOCKET_BASE_URL}/sheet/${sheetId}`;
+export function getWebSocketSheetURL(sheetId: string): string {
+  // Remove /ws suffix if it exists and add proper path
+  const baseUrl = WEBSOCKET_BASE_URL.replace(/\/ws$/, '');
+  return `${baseUrl}/ws/spreadsheet/${sheetId}`;
 }

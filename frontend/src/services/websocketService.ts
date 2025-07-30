@@ -1,5 +1,5 @@
 
-import { API_BASE_URL } from '../config/environment';
+import { getWebSocketSheetURL } from '../config/websocket';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type WSListener = (data: any) => void;
@@ -10,12 +10,10 @@ export default class WebsocketService {
   private onOpenCallbacks: (() => void)[] = [];
 
   constructor(sheetId: string) {
-    // Extract host and port from API_BASE_URL
-    const apiUrl = new URL(API_BASE_URL);
-    const protocol = apiUrl.protocol === 'https:' ? 'wss' : 'ws';
-    const host = apiUrl.host; // This includes both hostname and port
+    // Use the centralized WebSocket URL configuration
+    const wsUrl = getWebSocketSheetURL(sheetId);
     
-    this.ws = new WebSocket(`${protocol}://${host}/ws/spreadsheet/${sheetId}`);
+    this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
       console.log("WebSocket connection established");

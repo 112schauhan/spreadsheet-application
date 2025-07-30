@@ -1,4 +1,3 @@
-
 from spreadsheet import SpreadsheetService
 from fastapi import FastAPI,WebSocket, WebSocketDisconnect, Request, Response
 from fastapi.responses import HTMLResponse
@@ -6,6 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from websocket_handler import ConnectionManager
 from comments import CommentService
@@ -14,7 +17,8 @@ from csv_handler import csv_router
 from auth import router as auth_router
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+log_level = os.environ.get("LOG_LEVEL", "INFO")
+logging.basicConfig(level=getattr(logging, log_level.upper()))
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
@@ -40,47 +44,20 @@ allowed_origins = list(dict.fromkeys(allowed_origins))
 
 logger.info(f"Configured CORS origins: {allowed_origins}")
 
-# Manual CORS middleware for debugging
-@app.middleware("http")
-async def cors_handler(request: Request, call_next):
-    origin = request.headers.get("origin")
-    
-    # Handle preflight requests
-    if request.method == "OPTIONS":
-        response = Response()
-        if origin in allowed_origins or origin is None:
-            response.headers["Access-Control-Allow-Origin"] = origin or "*"
-            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-            response.headers["Access-Control-Allow-Headers"] = "*"
-            response.headers["Access-Control-Allow-Credentials"] = "true"
-        return response
-    
-    # Process the request
-    response = await call_next(request)
-    
-    # Add CORS headers to the response
-    if origin in allowed_origins or origin is None:
-        response.headers["Access-Control-Allow-Origin"] = origin or "*"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-    
-    return response
-
 # Allow specific origins for production deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Temporary wildcard for debugging
-    allow_credentials=False,  # Must be False when using wildcard
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+    allow_origins=["*"],  # Use configured origins
+    allow_credentials=True,  # Allow credentials for authenticated requests
+    allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
 
-# Add OPTIONS handler for preflight requests
-@app.options("/{full_path:path}")
-async def options_handler(full_path: str):
-    return {"message": "OK"}
+# # Add OPTIONS handler for preflight requests
+# @app.options("/{full_path:path}")
+# async def options_handler(full_path: str):
+#     return {"message": "OK"}
 
 app.include_router(csv_router, prefix="/api")
 app.include_router(auth_router, prefix="/api/auth")
