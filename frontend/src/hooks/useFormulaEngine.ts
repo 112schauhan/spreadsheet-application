@@ -6,7 +6,13 @@ import { type RootState } from "../store"
 function getRangeCells(range: string): string[] {
   // Handle single cell reference (e.g., "C2")
   if (!range.includes(':')) {
-    return [range.trim()];
+    const trimmedRange = range.trim();
+    // Validate single cell reference format
+    if (!/^[A-Z]+[0-9]+$/.test(trimmedRange)) {
+      console.warn("Invalid cell reference format:", trimmedRange);
+      return [];
+    }
+    return [trimmedRange];
   }
   
   // Handle range reference (e.g., "C2:C4")
@@ -22,6 +28,13 @@ function getRangeCells(range: string): string[] {
     eC = endCol.charCodeAt(0)
   const sR = +startRow,
     eR = +endRow
+    
+  // Validate that the range makes sense
+  if (sC > eC || sR > eR) {
+    console.warn("Invalid range order:", range);
+    return [];
+  }
+  
   const refs: string[] = []
   for (let c = sC; c <= eC; c++)
     for (let r = sR; r <= eR; r++) refs.push(String.fromCharCode(c) + r)
@@ -39,6 +52,10 @@ const useFormulaEngine = () => {
           const arg = f.substring(5, f.length - 1)
           console.log("SUM argument:", arg);
           const refs = getRangeCells(arg)
+          if (refs.length === 0) {
+            console.log("SUM: Invalid range, returning #ERROR");
+            return "#ERROR";
+          }
           console.log("SUM cell references:", refs);
           const result = refs.reduce((total, ref) => {
             const c = cells[ref]
@@ -53,6 +70,10 @@ const useFormulaEngine = () => {
           const arg = f.substring(9, f.length - 1)
           console.log("AVERAGE argument:", arg);
           const refs = getRangeCells(arg)
+          if (refs.length === 0) {
+            console.log("AVERAGE: Invalid range, returning #ERROR");
+            return "#ERROR";
+          }
           console.log("AVERAGE cell references:", refs);
           let sum = 0,
             count = 0
@@ -74,6 +95,10 @@ const useFormulaEngine = () => {
           const arg = f.substring(7, f.length - 1)
           console.log("COUNT argument:", arg);
           const refs = getRangeCells(arg)
+          if (refs.length === 0) {
+            console.log("COUNT: Invalid range, returning #ERROR");
+            return "#ERROR";
+          }
           console.log("COUNT cell references:", refs);
           const result = refs.filter(
             (ref) => {

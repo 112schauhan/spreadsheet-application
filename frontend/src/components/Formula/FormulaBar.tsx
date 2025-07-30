@@ -3,7 +3,7 @@ import { useSelector } from "react-redux"
 import { type RootState, useAppDispatch } from "../../store"
 import { setFormula, setFormulaError } from "../../store/formulaSlice"
 import { updateCellWithHistory } from "../../store/gridSlice"
-import { setLoading } from "../../store/uiSlice"
+import { setLoading, setNotification } from "../../store/uiSlice"
 import { isFormula, validateFormulaInput } from "../../utils/formulaUtils"
 import useFormulaEngine from "../../hooks/useFormulaEngine"
 
@@ -41,9 +41,32 @@ const FormulaBar: React.FC = () => {
     // Only validate and dispatch for formulas
     if (e.target.value.startsWith("=")) {
       if (!validateFormulaInput(e.target.value)) {
-        dispatch(setFormulaError("Invalid formula syntax"))
+        dispatch(setFormulaError("Invalid formula syntax. Use format like =SUM(A1:A10)"))
       } else {
-        dispatch(setFormulaError(null))
+        // Additional validation: check if the range format is valid
+        const formulaUpper = e.target.value.toUpperCase()
+        if (formulaUpper.startsWith("=SUM(") || formulaUpper.startsWith("=AVERAGE(") || formulaUpper.startsWith("=COUNT(")) {
+          const match = e.target.value.match(/^=\w+\(([^)]+)\)$/i)
+          if (match) {
+            const rangeArg = match[1]
+            // Basic validation of range format
+            if (rangeArg.includes(':')) {
+              if (!/^[A-Z]+[0-9]+:[A-Z]+[0-9]+$/.test(rangeArg.trim())) {
+                dispatch(setFormulaError("Invalid range format. Use format like A1:A10"))
+              } else {
+                dispatch(setFormulaError(null))
+              }
+            } else {
+              if (!/^[A-Z]+[0-9]+$/.test(rangeArg.trim())) {
+                dispatch(setFormulaError("Invalid cell reference. Use format like A1"))
+              } else {
+                dispatch(setFormulaError(null))
+              }
+            }
+          }
+        } else {
+          dispatch(setFormulaError(null))
+        }
       }
       dispatch(setFormula(e.target.value))
     } else {
@@ -53,6 +76,7 @@ const FormulaBar: React.FC = () => {
   }
 
   const onSubmit = async () => {
+    console.log("=== FORMULA SUBMISSION START ===")
     console.log("Submitting formula:", input)
     
     // Get the currently selected cell reference
@@ -60,6 +84,9 @@ const FormulaBar: React.FC = () => {
     
     if (!currentCellRef) {
       console.log("No cell selected")
+      const errorMsg = "No cell selected"
+      console.log("Dispatching error notification:", errorMsg)
+      dispatch(setNotification({ type: "error", message: errorMsg }))
       return
     }
     
@@ -74,9 +101,17 @@ const FormulaBar: React.FC = () => {
 
       if (isFormula(input)) {
         console.log("Processing formula:", input)
-        if (!validateFormulaInput(input)) {
+        console.log("Validating formula input...")
+        const isValid = validateFormulaInput(input)
+        console.log("Formula validation result:", isValid)
+        
+        if (!isValid) {
           console.log("Formula validation failed")
-          dispatch(setFormulaError("Cannot save invalid formula"))
+          const errorMsg = "Invalid formula syntax. Please check your formula format."
+          console.log("Dispatching validation error notification:", errorMsg)
+          dispatch(setFormulaError(errorMsg))
+          dispatch(setNotification({ type: "error", message: errorMsg }))
+          dispatch(setLoading(false)) // Ensure loading is turned off
           return
         }
         formula = input
@@ -85,7 +120,11 @@ const FormulaBar: React.FC = () => {
         const evaluatedResult = evaluate(input)
         console.log("Formula evaluation result:", evaluatedResult)
         if (evaluatedResult === "#ERROR") {
-          dispatch(setFormulaError("Formula evaluation error"))
+          const errorMsg = "Formula evaluation error. Please check your cell references and formula syntax."
+          console.log("Dispatching evaluation error notification:", errorMsg)
+          dispatch(setFormulaError(errorMsg))
+          dispatch(setNotification({ type: "error", message: errorMsg }))
+          dispatch(setLoading(false)) // Ensure loading is turned off
           return
         }
         valueToSave = evaluatedResult
@@ -93,15 +132,27 @@ const FormulaBar: React.FC = () => {
         // Handle common case where user forgets the = sign
         console.log("Detected formula without = sign, auto-correcting:", input)
         const correctedFormula = "=" + input
+        if (!validateFormulaInput(correctedFormula)) {
+          const errorMsg = "Invalid formula syntax. Please check your formula format."
+          dispatch(setFormulaError(errorMsg))
+          dispatch(setNotification({ type: "error", message: errorMsg }))
+          dispatch(setLoading(false)) // Ensure loading is turned off
+          return
+        }
         formula = correctedFormula
         console.log("Evaluating auto-corrected formula:", correctedFormula)
         const evaluatedResult = evaluate(correctedFormula)
         console.log("Formula evaluation result:", evaluatedResult)
         if (evaluatedResult === "#ERROR") {
-          dispatch(setFormulaError("Formula evaluation error"))
+          const errorMsg = "Formula evaluation error. Please check your cell references and formula syntax."
+          dispatch(setFormulaError(errorMsg))
+          dispatch(setNotification({ type: "error", message: errorMsg }))
+          dispatch(setLoading(false)) // Ensure loading is turned off
           return
         }
         valueToSave = evaluatedResult
+        // Show success message for auto-correction
+        dispatch(setNotification({ type: "success", message: `Auto-corrected formula to ${correctedFormula}` }))
       } else {
         console.log("Processing as regular value:", input)
         // Try to convert to number if it's numeric
@@ -131,13 +182,26 @@ const FormulaBar: React.FC = () => {
       dispatch(setFormulaError(null))
       console.log("Formula applied to cell:", currentCellRef, "with value:", valueToSave)
       
+      // Show success notification for formulas
+      if (formula) {
+        const successMsg = `Formula ${formula} applied successfully`
+        console.log("Dispatching success notification:", successMsg)
+        dispatch(setNotification({ type: "success", message: successMsg }))
+      }
+      
       // Verify the cell was updated by checking the state after a short delay
       setTimeout(() => {
         console.log("Grid state after update (delayed check):", cells[currentCellRef])
       }, 100);
+    } catch (error) {
+      console.error("Unexpected error in onSubmit:", error)
+      const errorMsg = "An unexpected error occurred while processing the formula"
+      console.log("Dispatching unexpected error notification:", errorMsg)
+      dispatch(setNotification({ type: "error", message: errorMsg }))
     } finally {
       // Always hide loading, even if there's an error
       dispatch(setLoading(false))
+      console.log("=== FORMULA SUBMISSION END ===")
     }
   }
 
@@ -166,12 +230,14 @@ const FormulaBar: React.FC = () => {
         aria-describedby="formula-error"
       />
       {formulaState.errors && (
-        <span
-          id="formula-error"
-          className="ml-3 text-red-600 text-sm select-none"
-        >
-          {formulaState.errors}
-        </span>
+        <div className="ml-3 flex items-center">
+          <span
+            id="formula-error"
+            className="text-red-600 text-sm select-none bg-red-50 px-2 py-1 rounded border border-red-200"
+          >
+            ⚠️ {formulaState.errors}
+          </span>
+        </div>
       )}
       <button
         onClick={onSubmit}
