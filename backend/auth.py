@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 from typing import Optional, Dict
-import PyJWT as jwt
+import jwt
 import os
 from dotenv import load_dotenv
 

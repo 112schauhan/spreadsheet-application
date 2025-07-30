@@ -138,11 +138,22 @@ def get_cell(sheet_id: str, cell_ref: str):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=port,
-        reload=False
-    )
+    host = os.environ.get("HOST", "0.0.0.0")
+    
+    logger.info(f"Starting server on {host}:{port}")
+    logger.info(f"Environment: {os.environ.get('ENVIRONMENT', 'development')}")
+    logger.info(f"Debug mode: {os.environ.get('DEBUG', 'false')}")
+    
+    try:
+        uvicorn.run(
+            "main:app",
+            host=host,
+            port=port,
+            reload=False,
+            log_level=os.environ.get("LOG_LEVEL", "info").lower()
+        )
+    except Exception as e:
+        logger.error(f"Failed to start server: {e}")
+        raise
 
 
