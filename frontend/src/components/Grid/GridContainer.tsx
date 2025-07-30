@@ -4,7 +4,6 @@ import { type RootState } from "../../store";
 import GridHeader from "./GridHeader";
 import RowHeader from "./RowHeader";
 import VirtualizedGrid from "./VirtualizedGrid";
-import SelectionManager from "./SelectionManager";
 import UserCursor from "../Collaboration/UserCursor";
 import ConflictResolutionModal from "../Collaboration/ConflictResolutionModal";
 import ScrollIndicator from "./ScrollIndicator";
@@ -42,14 +41,15 @@ const GridContainer: React.FC = () => {
   return (
     <div className="flex flex-col border border-gray-300 select-none flex-1 min-h-0">
       <div className="flex sticky top-0 z-10">
-        <div className="w-12 h-8 border-r border-b border-gray-300 bg-gray-50 shrink-0" />
+        <div className="w-12 h-8 border-r border-b border-gray-300 bg-gray-50 shrink-0 flex items-center justify-center">
+          <span className="text-xs text-gray-500">📊</span>
+        </div>
         <GridHeader />
       </div>
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 max-h-full">
         <RowHeader />
-        <div className="relative flex-1 min-h-0">
+        <div className="relative flex-1 min-h-0 max-h-full overflow-hidden">
           <VirtualizedGrid />
-          <SelectionManager />
           {/* Render other users' cursors */}
           {otherUsers.map((userId) => (
             <UserCursor key={userId} userId={userId} />
@@ -58,6 +58,12 @@ const GridContainer: React.FC = () => {
       </div>
       {/* Scroll position indicator */}
       <ScrollIndicator />
+      
+      {/* Grid info */}
+      <div className="bg-gray-50 border-t border-gray-300 px-3 py-1 text-xs text-gray-600 flex justify-between">
+        <span>Grid: 100 rows × 26 columns (A-Z)</span>
+        <span>Use scrollbars to navigate</span>
+      </div>
       
       {/* Conflict Resolution Modal */}
       <ConflictResolutionModal
