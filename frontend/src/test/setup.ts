@@ -12,15 +12,12 @@ afterEach(() => {
 })
 
 // Mock WebSocket for tests
-global.WebSocket = class MockWebSocket {
+class MockWebSocket {
   static readonly CONNECTING = 0
   static readonly OPEN = 1
   static readonly CLOSING = 2
   static readonly CLOSED = 3
 
-  constructor(url: string) {
-    this.url = url
-  }
   url: string
   send = vi.fn()
   close = vi.fn()
@@ -31,10 +28,17 @@ global.WebSocket = class MockWebSocket {
   readonly OPEN = 1
   readonly CLOSING = 2
   readonly CLOSED = 3
-} as unknown as typeof WebSocket
+
+  constructor(url: string) {
+    this.url = url
+  }
+}
+
+// Assign to globalThis which is more universally supported
+;(globalThis as unknown as { WebSocket: typeof MockWebSocket }).WebSocket = MockWebSocket
 
 // Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
+class MockIntersectionObserver {
   root = null
   rootMargin = '0px'
   thresholds = [0]
@@ -45,15 +49,19 @@ global.IntersectionObserver = class IntersectionObserver {
   disconnect = vi.fn()
   unobserve = vi.fn()
   takeRecords = vi.fn(() => [])
-} as unknown as typeof IntersectionObserver
+}
+
+;(globalThis as unknown as { IntersectionObserver: typeof MockIntersectionObserver }).IntersectionObserver = MockIntersectionObserver
 
 // Mock ResizeObserver
-global.ResizeObserver = class ResizeObserver {
+class MockResizeObserver {
   constructor() {}
   observe = vi.fn()
   disconnect = vi.fn()
   unobserve = vi.fn()
 }
 
+;(globalThis as unknown as { ResizeObserver: typeof MockResizeObserver }).ResizeObserver = MockResizeObserver
+
 // Mock scrollTo
-global.scrollTo = vi.fn()
+;(globalThis as unknown as { scrollTo: typeof vi.fn }).scrollTo = vi.fn()
