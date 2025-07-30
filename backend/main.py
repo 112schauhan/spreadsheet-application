@@ -14,10 +14,15 @@ from auth import router as auth_router
 
 app = FastAPI()
 
-# Allow all origins for development; adjust in production
+# Configure CORS origins from environment or use defaults
+allowed_origins = os.environ.get("ALLOWED_ORIGINS", 
+    "http://localhost:3000,http://localhost:5173,https://spreadsheet-application-nine.vercel.app"
+).split(",")
+
+# Allow specific origins for production deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
