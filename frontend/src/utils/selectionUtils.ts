@@ -9,18 +9,17 @@ export interface CellCoordinate {
  * Parse cell reference like "A1" into coordinates
  */
 export function parseCellRef(cellRef: string): CellCoordinate | null {
-  const match = cellRef.match(/^([A-Z]+)(\d+)$/);
+  const match = cellRef.match(/^([A-Z])(\d+)$/); // Only single letter for A-Z
   if (!match) return null;
   
-  const colLetters = match[1];
+  const colLetter = match[1];
   const rowNumber = parseInt(match[2], 10);
   
-  // Convert column letters to number (A=0, B=1, etc.)
-  let col = 0;
-  for (let i = 0; i < colLetters.length; i++) {
-    col = col * 26 + (colLetters.charCodeAt(i) - 65 + 1);
-  }
-  col -= 1; // Convert to 0-based
+  // Convert single column letter to number (A=0, B=1, ..., Z=25)
+  const col = colLetter.charCodeAt(0) - 65;
+  
+  // Validate limits
+  if (col > 25 || rowNumber > 100) return null;
   
   return { row: rowNumber - 1, col };
 }
@@ -29,41 +28,31 @@ export function parseCellRef(cellRef: string): CellCoordinate | null {
  * Convert coordinates to cell reference
  */
 export function coordinatesToCellRef(coord: CellCoordinate): string {
-  let col = coord.col;
-  let colLetters = '';
+  // Limit to A-Z (0-25)
+  const col = Math.min(Math.max(coord.col, 0), 25);
+  const row = Math.min(Math.max(coord.row + 1, 1), 100);
   
-  while (col >= 0) {
-    colLetters = String.fromCharCode(65 + (col % 26)) + colLetters;
-    col = Math.floor(col / 26) - 1;
-  }
-  
-  return colLetters + (coord.row + 1);
+  const colLetter = String.fromCharCode(65 + col);
+  return colLetter + row;
 }
 
 /**
  * Get column letter from column index
  */
 export function getColumnLetter(colIndex: number): string {
-  let col = colIndex;
-  let colLetters = '';
-  
-  while (col >= 0) {
-    colLetters = String.fromCharCode(65 + (col % 26)) + colLetters;
-    col = Math.floor(col / 26) - 1;
-  }
-  
-  return colLetters;
+  // Limit to A-Z (0-25)
+  const col = Math.min(Math.max(colIndex, 0), 25);
+  return String.fromCharCode(65 + col);
 }
 
 /**
  * Get column index from column letter
  */
 export function getColumnIndex(colLetter: string): number {
-  let col = 0;
-  for (let i = 0; i < colLetter.length; i++) {
-    col = col * 26 + (colLetter.charCodeAt(i) - 65 + 1);
-  }
-  return col - 1; // Convert to 0-based
+  // Only handle single letters A-Z
+  if (colLetter.length !== 1) return 0;
+  const col = colLetter.charCodeAt(0) - 65;
+  return Math.min(Math.max(col, 0), 25);
 }
 
 /**
