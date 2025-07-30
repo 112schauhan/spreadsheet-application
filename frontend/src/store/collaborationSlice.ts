@@ -51,7 +51,30 @@ const collaborationSlice = createSlice({
     },
 
     clearConflict(state, action: PayloadAction<string>) {
-      state.conflicts[action.payload] = false
+      const cellRef = action.payload;
+      delete state.conflicts[cellRef];
+    },
+
+    setConflict(state, action: PayloadAction<{ cellRef: string; conflicted: boolean }>) {
+      const { cellRef, conflicted } = action.payload;
+      state.conflicts[cellRef] = conflicted;
+    },
+
+    setCellAction(state, action: PayloadAction<{ cellRef: string; userId: string; action: string }>) {
+      const { cellRef, userId } = action.payload;
+      state.actions[cellRef] = userId;
+      
+      // Clear the action indicator after a few seconds
+      setTimeout(() => {
+        if (state.actions[cellRef] === userId) {
+          delete state.actions[cellRef];
+        }
+      }, 3000);
+    },
+
+    clearCellAction(state, action: PayloadAction<string>) {
+      const cellRef = action.payload;
+      delete state.actions[cellRef];
     },
   },
 })
@@ -62,6 +85,9 @@ export const {
   removeUser,
   resetCollaboration,
   addAuthenticatedUser,
-  clearConflict
+  clearConflict,
+  setConflict,
+  setCellAction,
+  clearCellAction
 } = collaborationSlice.actions
 export default collaborationSlice.reducer
