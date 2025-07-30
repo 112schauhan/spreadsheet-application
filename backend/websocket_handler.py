@@ -127,6 +127,7 @@ class ConnectionManager:
             value = message.get("value")
             formula = message.get("formula")
             user_id = self.usernames[sheet_id].get(websocket)
+            is_conflict_resolved = message.get("conflictResolved", False)
             
             # Store old value for history
             old_cell = self.spreadsheet_service.get_cell_value(sheet_id, cell_ref)
@@ -147,6 +148,7 @@ class ConnectionManager:
                 "formula": cell.formula,
                 "version": cell.version,
                 "userId": user_id,
+                "conflictResolved": is_conflict_resolved,
             })
         elif msg_type == "cursor_update":
             user_id = self.usernames[sheet_id].get(websocket)
@@ -155,6 +157,17 @@ class ConnectionManager:
                 "type": "cursor_update",
                 "userId": user_id,
                 "position": cursor_pos,
+            })
+        elif msg_type == "conflict_resolved":
+            # Handle conflict resolution messages
+            cell_ref = message.get("cellRef")
+            user_id = self.usernames[sheet_id].get(websocket)
+            
+            # Broadcast to all clients that conflict is resolved
+            await self.broadcast(sheet_id, {
+                "type": "conflict_resolved",
+                "cellRef": cell_ref,
+                "resolvedBy": user_id,
             })
         elif msg_type == "comment_add":
             cell_ref = message.get("cellRef")
