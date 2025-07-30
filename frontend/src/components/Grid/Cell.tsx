@@ -4,7 +4,7 @@ import { type RootState, useAppDispatch } from "../../store";
 import { updateCellWithHistory } from "../../store/gridSlice";
 import { selectCell } from "../../store/selectionSlice";
 import { setCellError, clearCellError } from "../../store/validationSlice";
-import { cursorUpdate } from "../../store/collaborationSlice";
+import { cursorUpdate, clearConflict } from "../../store/collaborationSlice";
 import { setCommentCount } from "../../store/commentSlice";
 import { validateCellValue } from "../../services/validationService";
 import { isFormula, validateFormulaInput } from "../../utils/formulaUtils";
@@ -12,6 +12,7 @@ import { isCellSelected } from "../../utils/selectionUtils";
 import useFormulaEngine from "../../hooks/useFormulaEngine";
 import LoadingSpinner from "../UI/LoadingSpinner";
 import CellComments from "../Comments/CellComments";
+import { useWebSocket } from "../../hooks/useWebSocketContext";
 
 interface CellProps {
   cellRef: string;
@@ -28,6 +29,18 @@ const Cell: React.FC<CellProps> = React.memo(({ cellRef, style }) => {
   
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const errors = useSelector((state: RootState) => state.validation.errors);
+  const collaboration = useSelector((state: RootState) => state.collaboration);
+  const { activeSheetId } = useSelector((state: RootState) => state.sheets);
+  
+  // WebSocket hook for real-time communication
+  const { sendMessage } = useWebSocket();
+  
+  // Check if this cell has a conflict
+  const hasConflict = collaboration.conflicts[cellRef] || false;
+  
+  // Check if this cell was recently modified by another user
+  const lastModifiedBy = collaboration.actions[cellRef];
+  const isModifiedByOther = lastModifiedBy && currentUser && lastModifiedBy !== `auth_${currentUser.username}`;
   
   // Memoized selector to prevent unnecessary rerenders
   const formatting = useSelector((state: RootState) => {
@@ -124,10 +137,22 @@ const Cell: React.FC<CellProps> = React.memo(({ cellRef, style }) => {
       }
     }
     
+    // Conflict indicator
+    let conflictClass = "";
+    if (hasConflict) {
+      conflictClass = "ring-2 ring-red-500 ring-inset animate-pulse";
+    }
+    
+    // Modified by other user indicator
+    let modificationClass = "";
+    if (isModifiedByOther) {
+      modificationClass = "ring-1 ring-yellow-400 ring-inset";
+    }
+    
     const editingClass = editing ? "cursor-text" : "";
     const hoverClass = !isSelected && !editing && (!formatting?.bgColor || formatting.bgColor === '#ffffff') ? "hover:bg-gray-50" : "";
     
-    return `${baseClasses} ${backgroundClass} ${selectionClass} ${editingClass} ${hoverClass}`.trim();
+    return `${baseClasses} ${backgroundClass} ${selectionClass} ${conflictClass} ${modificationClass} ${editingClass} ${hoverClass}`.trim();
   };
 
   // Send cursor position update when cell is selected
@@ -139,17 +164,32 @@ const Cell: React.FC<CellProps> = React.memo(({ cellRef, style }) => {
       if (gridContainer) {
         const gridRect = gridContainer.getBoundingClientRect();
         
+        const position = {
+          cellRef,
+          top: rect.top - gridRect.top + rect.height / 2,
+          left: rect.left - gridRect.left + rect.width / 2,
+        };
+        
+        // Update local state
         dispatch(cursorUpdate({
           userId: `auth_${currentUser.username}`,
-          position: {
-            cellRef,
-            top: rect.top - gridRect.top + rect.height / 2,
-            left: rect.left - gridRect.left + rect.width / 2,
-          }
+          position
         }));
+        
+        // Send cursor update via WebSocket
+        try {
+          sendMessage({
+            type: "cursor_update",
+            userId: `auth_${currentUser.username}`,
+            position,
+            sheetId: activeSheetId
+          });
+        } catch (error) {
+          console.warn("Failed to send cursor update:", error);
+        }
       }
     }
-  }, [isSelected, currentUser, cellRef, dispatch]);
+  }, [isSelected, currentUser, cellRef, dispatch, sendMessage, activeSheetId]);
 
   const startEdit = () => {
     dispatch(selectCell({ cellRef }));
@@ -200,8 +240,30 @@ const Cell: React.FC<CellProps> = React.memo(({ cellRef, style }) => {
       }
     }
 
+    // Clear any existing conflict for this cell
+    dispatch(clearConflict(cellRef));
+
+    // Update local state first for immediate UI response
     dispatch(updateCellWithHistory({ cellRef, value: valueToSave, formula }));
-    // For real-time update, send WebSocket message here
+    
+    // Send real-time update via WebSocket
+    const wsMessage = {
+      type: "cell_update",
+      cellRef,
+      value: valueToSave,
+      formula,
+      userId: currentUser ? `auth_${currentUser.username}` : 'anonymous',
+      sheetId: activeSheetId,
+      timestamp: Date.now()
+    };
+    
+    // Send the update using the WebSocket context
+    try {
+      sendMessage(wsMessage);
+    } catch (error) {
+      console.warn("Failed to send real-time cell update:", error);
+      // Continue with local update even if WebSocket fails
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,6 +358,15 @@ const Cell: React.FC<CellProps> = React.memo(({ cellRef, style }) => {
       {commentCount > 0 && (
         <div className="absolute top-0 right-0 w-3 h-3 bg-orange-400 rounded-full flex items-center justify-center text-xs text-white font-bold transform translate-x-1 -translate-y-1 shadow-sm">
           {commentCount > 9 ? '9+' : commentCount}
+        </div>
+      )}
+      {hasConflict && (
+        <div className="absolute top-0 left-0 w-3 h-3 bg-red-500 rounded-full transform -translate-x-1 -translate-y-1 shadow-sm animate-pulse">
+          <div className="absolute inset-0 rounded-full bg-red-500 animate-ping"></div>
+        </div>
+      )}
+      {isModifiedByOther && !hasConflict && (
+        <div className="absolute bottom-0 right-0 w-2 h-2 bg-yellow-400 rounded-full transform translate-x-1 translate-y-1 shadow-sm">
         </div>
       )}
       <CellComments
