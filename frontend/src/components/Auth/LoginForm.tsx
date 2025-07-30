@@ -26,6 +26,49 @@ const LoginForm: React.FC = () => {
         <h1 className="text-2xl font-bold text-center mb-1">Welcome Back</h1>
         <p className="text-center text-gray-600 mb-6">Please sign in to your account</p>
 
+        {/* Demo Accounts */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="text-sm font-medium text-blue-900 mb-3">Demo Accounts (Click to auto-fill)</h3>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setUsername("user1");
+                setPassword("password1");
+              }}
+              className="text-xs bg-white border border-blue-300 text-blue-700 px-3 py-2 rounded hover:bg-blue-50 transition-colors"
+              disabled={status === "loading" || submitted}
+            >
+              � User 1
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUsername("user2");
+                setPassword("password2");
+              }}
+              className="text-xs bg-white border border-blue-300 text-blue-700 px-3 py-2 rounded hover:bg-blue-50 transition-colors"
+              disabled={status === "loading" || submitted}
+            >
+              � User 2
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUsername("user3");
+                setPassword("password3");
+              }}
+              className="text-xs bg-white border border-blue-300 text-blue-700 px-3 py-2 rounded hover:bg-blue-50 transition-colors"
+              disabled={status === "loading" || submitted}
+            >
+              � User 3
+            </button>
+          </div>
+          <p className="text-xs text-blue-600 mt-2">
+            💡 Test collaboration by opening multiple tabs and logging in as different users
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Username Field */}
           <div>
