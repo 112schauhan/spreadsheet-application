@@ -42,9 +42,9 @@ const VirtualizedGrid: React.FC = () => {
       const scrollLeft = containerRef.current.scrollLeft;
 
       const startRow = Math.floor(scrollTop / CELL_HEIGHT) + 1;
-      const endRow = Math.min(startRow + visibleRowCount, grid.rows);
+      const endRow = Math.min(startRow + visibleRowCount, Math.min(grid.rows, 100)); // Limit to 100 rows
       const startCol = Math.floor(scrollLeft / CELL_WIDTH);
-      const endCol = Math.min(startCol + visibleColCount, grid.columns - 1);
+      const endCol = Math.min(startCol + visibleColCount, Math.min(grid.columns - 1, 25)); // Limit to 26 columns (0-25)
 
       dispatch(
         setVisibleRange({
@@ -62,21 +62,17 @@ const VirtualizedGrid: React.FC = () => {
   }, [dispatch, grid.rows, grid.columns, visibleRowCount, visibleColCount]);
 
   const getColLetter = (colIndex: number) => {
-    let result = '';
-    let num = colIndex;
-    while (num >= 0) {
-      result = String.fromCharCode(65 + (num % 26)) + result;
-      num = Math.floor(num / 26) - 1;
-    }
-    return result;
+    // Limit to 26 columns (A-Z)
+    if (colIndex >= 26) return 'Z';
+    return String.fromCharCode(65 + colIndex);
   };
 
   const parseColLetter = useCallback((colStr: string) => {
-    let colIndex = 0;
-    for (let i = 0; i < colStr.length; i++) {
-      colIndex = colIndex * 26 + (colStr.charCodeAt(i) - 65 + 1);
+    // Simple A-Z parsing for 26 columns max
+    if (colStr.length === 1) {
+      return colStr.charCodeAt(0) - 65; // A=0, B=1, ..., Z=25
     }
-    return colIndex - 1; // Convert to 0-based index
+    return 25; // Default to Z (25) if invalid
   }, []);
 
   const parseCellRef = useCallback((cellRef: string) => {
@@ -142,10 +138,14 @@ const VirtualizedGrid: React.FC = () => {
   }, [selection.lastSelectedCell, parseCellRef]);
 
   const { visibleRange } = grid;
+  // Enforce limits: max 100 rows, max 26 columns
+  const maxRows = Math.min(grid.rows, 100);
+  const maxCols = Math.min(grid.columns, 26);
+  
   const startRow = Math.max(1, visibleRange.rows[0] - OVERSCAN_COUNT);
-  const endRow = Math.min(grid.rows, visibleRange.rows[1] + OVERSCAN_COUNT);
+  const endRow = Math.min(maxRows, visibleRange.rows[1] + OVERSCAN_COUNT);
   const startCol = Math.max(0, visibleRange.cols[0] - OVERSCAN_COUNT);
-  const endCol = Math.min(grid.columns - 1, visibleRange.cols[1] + OVERSCAN_COUNT);
+  const endCol = Math.min(maxCols - 1, visibleRange.cols[1] + OVERSCAN_COUNT);
 
   const rows = Array.from(
     { length: endRow - startRow + 1 },
@@ -159,47 +159,70 @@ const VirtualizedGrid: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="overflow-auto h-full w-full bg-white relative spreadsheet-scroll"
+      className="h-full w-full bg-white relative spreadsheet-scroll"
       style={{
-        scrollbarWidth: 'auto', // For Firefox
-        scrollbarColor: '#CBD5E0 #F7FAFC', // For Firefox
+        overflow: 'auto', // Auto scrollbars when content overflows
+        scrollbarWidth: 'auto', // For Firefox - show full scrollbars
+        scrollbarColor: '#374151 #D1D5DB', // For Firefox - thumb and track colors
+        maxHeight: 'calc(100vh - 300px)', // Ensure container has limited height
+        maxWidth: '100%', // Ensure container has limited width
       }}
     >
-      {/* Custom scrollbar styles for WebKit browsers */}
+      {/* Enhanced scrollbar styles for WebKit browsers */}
       <style>{`
+        .spreadsheet-scroll {
+          scrollbar-width: auto !important;
+          scrollbar-color: #374151 #D1D5DB !important;
+          scrollbar-gutter: stable;
+        }
+        
         .spreadsheet-scroll::-webkit-scrollbar {
-          width: 12px;
-          height: 12px;
+          width: 16px !important;
+          height: 16px !important;
+          background-color: #D1D5DB !important;
+          display: block !important;
         }
         
         .spreadsheet-scroll::-webkit-scrollbar-track {
-          background: #F7FAFC;
-          border-radius: 6px;
+          background: #D1D5DB !important;
+          border-radius: 4px !important;
         }
         
         .spreadsheet-scroll::-webkit-scrollbar-thumb {
-          background: #CBD5E0;
-          border-radius: 6px;
-          border: 2px solid #F7FAFC;
+          background: #374151 !important;
+          border-radius: 4px !important;
+          border: 2px solid #D1D5DB !important;
+          min-height: 30px !important;
+          min-width: 30px !important;
         }
         
         .spreadsheet-scroll::-webkit-scrollbar-thumb:hover {
-          background: #A0AEC0;
+          background: #1F2937 !important;
+        }
+        
+        .spreadsheet-scroll::-webkit-scrollbar-thumb:active {
+          background: #111827 !important;
         }
         
         .spreadsheet-scroll::-webkit-scrollbar-corner {
-          background: #F7FAFC;
+          background: #D1D5DB !important;
         }
       `}</style>
       
-      {/* Total scrollable area */}
+      {/* Total scrollable area - Create a large content area to trigger scrollbars */}
       <div
-        className="relative"
+        className="relative bg-gray-50"
         style={{
-          width: CELL_WIDTH * grid.columns,
-          height: CELL_HEIGHT * grid.rows,
+          width: '2600px', // 26 columns × 100px - larger than any typical container
+          height: '2800px', // 100 rows × 28px - larger than any typical container
+          border: '1px solid red', // Debug: visible border to see the content area
         }}
       >
+        {/* Debug: Corner markers to show content boundaries */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '10px', height: '10px', backgroundColor: 'green' }}></div>
+        <div style={{ position: 'absolute', top: 0, right: 0, width: '10px', height: '10px', backgroundColor: 'blue' }}></div>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '10px', height: '10px', backgroundColor: 'orange' }}></div>
+        <div style={{ position: 'absolute', bottom: 0, right: 0, width: '10px', height: '10px', backgroundColor: 'purple' }}></div>
         {/* Render only visible cells */}
         {rows.map((row) =>
           cols.map((col) => {
