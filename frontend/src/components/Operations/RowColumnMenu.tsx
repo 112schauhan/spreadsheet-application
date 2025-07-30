@@ -14,9 +14,6 @@ const RowColumnMenu: React.FC = () => {
       // Insert after the last selected row
       const lastSelectedRow = Math.max(...selectedRows);
       dispatch(insertRowAfter(lastSelectedRow));
-    } else {
-      // If no row is selected, insert at the end
-      dispatch(insertRowAfter(rows));
     }
   };
 
@@ -35,10 +32,6 @@ const RowColumnMenu: React.FC = () => {
       if (lastSelectedColumn) {
         dispatch(insertColumnAfter(lastSelectedColumn));
       }
-    } else {
-      // If no column is selected, insert at the end
-      const lastColumnLetter = String.fromCharCode(64 + columns); // Convert number to letter
-      dispatch(insertColumnAfter(lastColumnLetter));
     }
   };
 
@@ -55,7 +48,7 @@ const RowColumnMenu: React.FC = () => {
       const lastRow = Math.max(...selectedRows);
       return `Insert Row After ${lastRow}`;
     }
-    return 'Add Row at End';
+    return 'Select a row to add';
   };
 
   const getColumnButtonText = () => {
@@ -63,7 +56,7 @@ const RowColumnMenu: React.FC = () => {
       const lastColumn = selectedColumns.sort().pop();
       return `Insert Column After ${lastColumn}`;
     }
-    return 'Add Column at End';
+    return 'Select a column to add';
   };
 
   const getDeleteRowText = () => {
@@ -86,15 +79,16 @@ const RowColumnMenu: React.FC = () => {
     <div className="flex flex-col space-y-2 p-4 bg-white rounded shadow border border-gray-200">
       <div className="flex items-center space-x-2">
         <button
-          className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
+          className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={handleInsertRow}
+          disabled={selectedRows.length === 0}
           title={getRowButtonText()}
         >
           <span className="text-sm font-bold">+</span>
           Row
         </button>
         <button
-          className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-60"
+          className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={handleDeleteRow}
           disabled={selectedRows.length === 0 || rows <= 1}
           title={getDeleteRowText()}
@@ -106,15 +100,16 @@ const RowColumnMenu: React.FC = () => {
       </div>
       <div className="flex items-center space-x-2">
         <button
-          className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60"
+          className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={handleInsertColumn}
+          disabled={selectedColumns.length === 0}
           title={getColumnButtonText()}
         >
           <span className="text-sm font-bold">+</span>
           Column
         </button>
         <button
-          className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-60"
+          className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
           onClick={handleDeleteColumn}
           disabled={selectedColumns.length === 0 || columns <= 1}
           title={getDeleteColumnText()}
