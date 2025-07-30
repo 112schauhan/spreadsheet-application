@@ -3,25 +3,9 @@ import { useSelector } from "react-redux";
 import { type RootState } from "../../store";
 import { parseCellRef, colToIndex, getCellRangeRefs } from "../../utils/cellUtils";
 import { type CellData } from "../../types/grid.types";
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell as ChartCell,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import ChartModal from "./ChartModal";
 
 const CHART_TYPES = ["Bar", "Line", "Pie"];
-
-const COLORS = ["#4F46E5", "#F59E42", "#22B573", "#E6468D", "#1976D2"];
 
 function extractChartData(range: string, cells: Record<string, CellData>) {
   // range: "A2:B5" etc.
@@ -60,43 +44,31 @@ function extractChartData(range: string, cells: Record<string, CellData>) {
 const ChartGenerator: React.FC = () => {
   const [chartType, setChartType] = useState<string>("Bar");
   const [dataRange, setDataRange] = useState<string>("A2:B5");
-  const [chartReady, setChartReady] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [chartData, setChartData] = useState<Record<string, string | number>[]>([]);
 
   const cells = useSelector((state: RootState) => state.grid.cells);
-
-  const [chartData, setChartData] = useState<Record<string, string | number>[]>([]);
 
   const onGenerateChart = (e: React.FormEvent) => {
     e.preventDefault();
     if (!dataRange.match(/^[A-Z]+\d+:[A-Z]+\d+$/)) {
       setError("Range format must be like A2:B5");
-      setChartReady(false);
       return;
     }
     const data = extractChartData(dataRange, cells);
     if (!data.length) {
       setError("No data found in the selected range.");
-      setChartReady(false);
       return;
     }
     setChartData(data);
-    setChartReady(true);
     setError(null);
+    setIsModalOpen(true);
   };
 
-  const onReset = () => {
-    setChartReady(false);
-    setError(null);
+  const onCloseModal = () => {
+    setIsModalOpen(false);
   };
-
-  // Figure out numeric columns for graphing
-  const keys = chartData.length ? Object.keys(chartData[0] || {}) : [];
-  const numericKeys = keys.filter(
-    (k) => chartData.some((row) => !isNaN(Number(row[k])))
-  );
-
-  // No longer needed as we'll render charts directly
 
   return (
     <div className="p-5 bg-white border border-gray-300 shadow rounded max-w-md w-full">
@@ -131,98 +103,36 @@ const ChartGenerator: React.FC = () => {
             required
           />
         </div>
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition cursor-pointer"
-          >
-            Generate Chart
-          </button>
-          <button
-            type="button"
-            className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 cursor-pointer disabled:cursor-not-allowed"
-            onClick={onReset}
-            disabled={!chartReady}
-          >
-            Reset
-          </button>
-        </div>
-        {error && <p className="text-red-600">{error}</p>}
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition cursor-pointer flex items-center justify-center gap-2"
+        >
+          <span>📊</span>
+          Generate Chart
+        </button>
+        {error && (
+          <div className="text-red-600 text-sm p-3 bg-red-50 border border-red-200 rounded">
+            {error}
+          </div>
+        )}
       </form>
 
-      {chartReady && chartData.length > 0 && numericKeys.length > 0 && (
-        <div className="mt-7 w-full h-72">
-          {chartType === "Bar" && (
-            <ResponsiveContainer width="100%" height="100%">
-              <>
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey={keys[0]} />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  {numericKeys.map((k, i) => (
-                    <Bar dataKey={k} fill={COLORS[i % COLORS.length]} key={k} />
-                  ))}
-                </BarChart>
-              </>
-            </ResponsiveContainer>
-          )}
-          {chartType === "Line" && (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey={keys[0]} />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                {numericKeys.map((k, i) => (
-                  <Line
-                    type="monotone"
-                    dataKey={k}
-                    stroke={COLORS[i % COLORS.length]}
-                    key={k}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-          {chartType === "Pie" && numericKeys.length > 0 && (
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Tooltip />
-                <Legend />
-                <Pie
-                  data={chartData}
-                  dataKey={numericKeys[0]}
-                  nameKey={keys[0]}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  fill={COLORS[0]}
-                  label
-                >
-                  {chartData.map((_, i) => (
-                    <ChartCell
-                      key={`cell-${i}`}
-                      fill={COLORS[i % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      )}
-      {chartReady && numericKeys.length === 0 && (
-        <div className="text-red-500 mt-4">No numeric data found in selection.</div>
-      )}
+      <div className="mt-4 text-sm text-gray-600">
+        <p className="mb-2">💡 <strong>Tips:</strong></p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>Include headers in row 1</li>
+          <li>Select data with numeric values</li>
+          <li>Try ranges like A1:C10</li>
+        </ul>
+      </div>
+
+      <ChartModal
+        isOpen={isModalOpen}
+        onClose={onCloseModal}
+        chartType={chartType}
+        chartData={chartData}
+        dataRange={dataRange}
+      />
     </div>
   );
 };
